@@ -1,30 +1,35 @@
 import React from "react";
-import { Routes, Route, Outlet } from "react-router-dom";
-import DashboardNavbar from "../components/DashboardNavbar";
-import Newsfeed from "./Newsfeed";
-import Profile from "./Profile";
-import Groups from "./Groups";
-import Events from "./Events";
+import { Routes, Route, Navigate } from "react-router-dom";
+import DashNav from "../components/DashNav";
+import Greeting from "../components/Greeting";
 import Members from "./Members";
+import Newsfeed from "./Newsfeed";
+import Events from "./Events";
+import Groups from "./Groups";
+import UserProfile from "./UserProfile";
 
-const Dashboard = ({ user, handleLogout }) => {
+const Dashboard = ({ user, onLogout }) => {
   return (
-    <div className="flex flex-col">
-      <DashboardNavbar user={user} handleLogout={handleLogout} />
-      
-      {/* Content for the selected page */}
-      <div className="p-4">
+    <div className="min-h-screen bg-gray-100">
+      {/* Navbar */}
+      <DashNav user={user} onLogout={onLogout} />
+
+      {/* Main Content */}
+      <main className="container mx-auto px-6 py-8">
+        {/* Greeting */}
+        <Greeting user={user} />
+
+        {/* Nested Routes for Dashboard Sections */}
         <Routes>
-          <Route path="newsfeed" element={<Newsfeed />} />
-          <Route
-            path="profile"
-            element={<Profile user={user} onLogout={handleLogout} />} // Pass handleLogout here
-          />
-          <Route path="groups" element={<Groups />} />
-          <Route path="events" element={<Events />} />
-          <Route path="members" element={<Members />} />
+          <Route path="members" element={<Members user={user} />} />
+          <Route path="newsfeed" element={<Newsfeed user={user} />} />
+          <Route path="events" element={<Events user={user} />} />
+          <Route path="groups" element={<Groups user={user} />} />
+          {/* Default to Newsfeed */}
+          <Route path="/" element={<Navigate to="newsfeed" />} />
+          <Route path="profile" element={<UserProfile user={user} />} />
         </Routes>
-      </div>
+      </main>
     </div>
   );
 };
