@@ -1,99 +1,81 @@
 import React, { useState } from "react";
-import axios from "../utils/api";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const Login = ({ onLogin }) => {
+function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState("");
-  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Hook to navigate programmatically
 
-  const validateForm = () => {
-    const errors = {};
-    if (!email) errors.email = "Email is required";
-    if (!password) errors.password = "Password is required";
-    return errors;
-  };
-
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Clear previous server error if user starts typing again
-    if (serverError) setServerError("");
-
-    const formErrors = validateForm();
-    setErrors(formErrors);
-
-    if (Object.keys(formErrors).length > 0) return;
-
     try {
-      const response = await axios.post("/sessions", {
-        user: { email, password },
-      });
+      // Make sure the payload is correctly structured, without the session key
+      const response = await axios.post(
+        "http://localhost:3000/sessions", 
+        { user: { email, password } },  // Send only the user object
+        { withCredentials: true }
+      );
 
       if (response.data.logged_in) {
-        const user = response.data.user;
-
-        // Save user data in localStorage
-        localStorage.setItem("user", JSON.stringify(user));
-        onLogin(user);
-
-        // Navigate to the dashboard
+        // Update the user state in App.js
+        onLogin(response.data.user);
+        // Navigate to dashboard after successful login
         navigate("/dashboard");
-
-        // Optionally, clear form fields after successful login
-        setEmail("");
-        setPassword("");
+      } else {
+        setError("Invalid credentials, please try again.");
       }
     } catch (error) {
-      setServerError("Invalid credentials or server error.");
+      console.error("Error logging in:", error);
+      setError("An error occurred during login.");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h2 className="text-3xl font-semibold mb-4">Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div className="mb-6">
+            <label htmlFor="password" className="block text-gray-700 font-semibold mb-2">Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+          
+          <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none">
+            Login
+          </button>
+        </form>
 
-      {serverError && (
-        <div className="text-red-600 bg-red-100 p-2 mb-4 rounded-md w-full max-w-sm text-center">
-          {serverError}
+        <div className="mt-4 text-center">
+          <p className="text-gray-600">Don't have an account? <a href="/signup" className="text-blue-500 hover:text-blue-700">Sign Up</a></p>
         </div>
-      )}
-
-      <form onSubmit={handleLogin} className="w-full max-w-sm bg-white p-6 rounded-lg shadow-md">
-        <div className="mb-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
-              errors.email ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
-            }`}
-          />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-        </div>
-
-        <div className="mb-4">
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
-              errors.password ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
-            }`}
-          />
-          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-        </div>
-
-        <button type="submit" className="w-full p-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Login
-        </button>
-      </form>
+      </div>
     </div>
   );
-};
+}
 
 export default Login;
