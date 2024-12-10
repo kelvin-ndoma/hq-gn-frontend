@@ -1,33 +1,47 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import axios from "axios";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
-
-import axios from "axios";
+import Profile from "./pages/Profile";
+import Newsfeed from "./pages/Newsfeed";  // Newsfeed Component
+import Members from "./pages/Members";
+import Events from "./pages/Events";
+import Groups from "./pages/Groups";
+import Settings from "./pages/Settings";
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = sessionStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchUser();
-  }, []);
+    if (!user) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const fetchUser = async () => {
     try {
       const response = await axios.get("http://localhost:3000/logged_in", {
         headers: {
-          Accept: "application/json"
+          Accept: "application/json",
         },
-        withCredentials: true
+        withCredentials: true,
       });
-      console.log('Response from /logged_in route:', response);
+
       if (response.data.logged_in) {
         setUser(response.data.user);
+        sessionStorage.setItem("user", JSON.stringify(response.data.user));
       } else {
         setUser(null);
+        sessionStorage.removeItem("user");
       }
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -39,18 +53,14 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
+    sessionStorage.setItem("user", JSON.stringify(userData));
   };
 
   const handleLogout = async () => {
     try {
-      const response = await axios.delete("http://localhost:3000/logout");
-      if (response.status === 200) {
-        setUser(null);
-        // Redirect user to login page after logout
-        window.location.href = "/login";
-      } else {
-        console.error("Logout failed:", response);
-      }
+      await axios.delete("http://localhost:3000/logout", { withCredentials: true });
+      setUser(null);
+      sessionStorage.removeItem("user");
     } catch (error) {
       console.error("Error occurred during logout:", error);
     }
@@ -61,21 +71,25 @@ function App() {
   }
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        {/* Only render dashboard if user is logged in */}
-        {user && (
-          <Route path="/dashboard" element={<Dashboard user={user} onLogout={handleLogout} />} />
-        )}
-        {/* Route to Signup and Login pages */}
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        
-        {/* Redirect to login if user is not logged in */}
-        {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
-      </Routes>
-    </>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login onLogin={handleLogin} />} />
+      <Route path="/signup" element={<Signup />} />
+
+      {user && (
+        <Route path="/dashboard" element={<Dashboard user={user} setUser={setUser} onLogout={handleLogout} />}>
+          {/* Nested routes */}
+          <Route path="profile" element={<Profile />} />
+          <Route path="newsfeed" element={<Newsfeed user={user} />} />  {/* Newsfeed Component */}
+          <Route path="members" element={<Members />} />
+          <Route path="events" element={<Events />} />
+          <Route path="groups" element={<Groups />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+      )}
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 
