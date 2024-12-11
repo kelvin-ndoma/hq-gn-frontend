@@ -11,6 +11,7 @@ import Members from "./pages/Members";
 import Events from "./pages/Events";
 import Groups from "./pages/Groups";
 import Settings from "./pages/Settings";
+import EditProfile from "./pages/EditProfile"; // Import the EditProfile component
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -66,6 +67,11 @@ function App() {
     }
   };
 
+  const handleProfileUpdate = (updatedUser) => {
+    setUser(updatedUser);
+    sessionStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -79,8 +85,9 @@ function App() {
       {user && (
         <Route path="/dashboard" element={<Dashboard user={user} setUser={setUser} onLogout={handleLogout} />}>
           {/* Nested routes */}
-          <Route path="profile" element={<Profile />} />
-          <Route path="newsfeed" element={<Newsfeed user={user} />} />  {/* Newsfeed Component */}
+          <Route path="profile" element={<Profile user={user} setUser={setUser} />} />
+          <Route path="profile/edit" element={<EditProfile user={user} onProfileUpdate={handleProfileUpdate} />} /> {/* Edit Profile route */}
+          <Route path="newsfeed" element={<Newsfeed user={user} />} />
           <Route path="members" element={<Members />} />
           <Route path="events" element={<Events />} />
           <Route path="groups" element={<Groups />} />

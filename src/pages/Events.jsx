@@ -8,8 +8,9 @@ const Events = () => {
       {/* Event List */}
       <div className="space-y-6">
         <div className="p-4 bg-gray-50 rounded-md shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-700">Event Title 1</h3>
+          <h3 className="text-lg font-semibold text-gray-700">Image</h3>
           <p className="text-sm text-gray-500">Event description goes here...</p>
+          <p className="text-sm text-gray-500">Rsvp</p>
           <div className="mt-2 text-sm text-gray-500">Date: 2024-12-01</div>
         </div>
 
